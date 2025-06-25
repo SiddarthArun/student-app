@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Log In</title>
+{% endblock %}
+
+{% block body_class %}centered-body{% endblock %}
+
+{% block body %}
+
+<div class="entrycontainer">
+<div class="entrybox">
+
+<h1>Login</h1>
+
+{% if error %}
+    <div style="color: red; margin-bottom: 10px;">{{ error }}</div>
+{% endif %}
+
+<form method="POST">
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="password" name="password" placeholder="Password" required><br>
+    <input class='button1' type="submit" value="Log In">
+</form>
+
+<a href="{{ url_for('dashboard') }}"><button class='button1'>Back</button></a>
+</div>
+</div>
+
+{% endblock %}

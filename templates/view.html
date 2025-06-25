@@ -1,0 +1,155 @@
+{% extends 'base.html' %} 
+{% block head %}
+<title>Your Classes</title>
+{% endblock %} 
+{% block body_class %}default-body{% endblock %}
+
+{% block body %}
+
+<div id="page_layout">
+  <ul id="navbar">
+    <li>
+      <a href="/work"><button>Work Session</button></a>
+    </li>
+    <li>
+      <a href="/add_course"><button>Add Course</button></a>
+    </li>
+    <li>
+      <a href="/add_assignment"><button>Add Assignment</button></a>
+    </li>
+    <li></li>
+    <a href="/logout"><button>Log Out</button></a>
+  </ul>
+
+  <div id="content">
+    <div id="main-section">
+      <div id="outlook">
+        <h1>Your 7-Day Outlook</h1>
+        <table border="1">
+          <tr>
+            {%for day, assignments in grouped.items()%}
+            <th>{{day}}</th>
+            {%endfor%}
+          </tr>
+
+          <tr>
+            {%for day, assignments in grouped.items()%}
+            <td>
+              {%if assignments%}
+              <ul id="outlooklist">
+                {%for assignment in assignments%}
+                <li>{{assignment.name}}</li>
+                {%endfor%}
+              </ul>
+              {%else%}
+              <p>no assignments due</p>
+              {%endif%}
+            </td>
+            {%endfor%}
+          </tr>
+        </table>
+      </div>
+      <div id="mainbox">
+        <h1>Your Classes</h1>
+
+        {% for course in courses %}
+        <div id="coursebox">
+          <div>
+            <span style="font-size: 1.5em; font-weight: bold"
+              >{{ course.name }}</span
+            >
+            <form
+              action="{{ url_for('delete_course', id=course.id) }}"
+              method="POST"
+              style="display: inline"
+            >
+              <button class="button2" type="submit">
+                <img
+                  src="{{ url_for('static', filename='delete_icon_google.svg') }}"
+                  alt="Delete"
+                />
+              </button>
+            </form>
+            <a href="{{ url_for('edit_course', id=course.id) }}">
+              <button class="button2" type="submit">
+                <img
+                  src="{{ url_for('static', filename='edit_icon_google.svg') }}"
+                  alt="Edit"
+                />
+              </button>
+            </a>
+          </div>
+
+          <ul>
+            {% for assignment in course.assignments %}
+            <li>
+              <span
+                class="{% if assignment.priority == 'High' %}priority-high {% elif assignment.priority == 'Medium' %}priority-medium {% else %}priority-low {% endif %} {% if assignment.completed %}completed{%endif%}"
+              >
+                {{ assignment.name }}
+              </span>
+
+              {% if assignment.due_date %}
+              <span class="{%if assignment.completed%}completed{%endif%}">
+                – due {{ assignment.due_date.strftime('%b %d, %Y') }}
+              </span>
+              {% endif %}
+
+              <form
+                action="{{ url_for('toggle_assignment', id=assignment.id) }}"
+                method="POST"
+                style="display: inline"
+              >
+                <button class="button2" type="submit">
+                  <img
+                    src="{{ url_for('static', filename='toggle_icon_google.svg') }}"
+                    alt="Delete"
+                  />
+                </button>
+              </form>
+
+              <form
+                action="{{ url_for('delete_assignment', id=assignment.id) }}"
+                method="POST"
+                style="display: inline"
+              >
+                <button class="button2" type="submit">
+                  <img
+                    src="{{ url_for('static', filename='delete_icon_google.svg') }}"
+                    alt="Delete"
+                  />
+                </button>
+              </form>
+
+              <a href="{{ url_for('edit_assignment', id=assignment.id) }}">
+                <button class="button2">
+                  <img
+                    src="{{ url_for('static', filename='edit_icon_google.svg') }}"
+                    alt="Edit"
+                  />
+                </button>
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+
+        <form method="POST" action="{{ url_for('remove_completed') }}">
+          <button class="button1" type="submit">
+            Remove Completed Assignments
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="recommended">
+      <h1><i>Hello, {{name}}</i></h1>
+      <h2>You should work on:</h2>
+      <h3><u>{{recommended.name}}</u> - {{recommended.course.name}}</h3>
+      <p>Due: {{recommended.due_date}}</p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

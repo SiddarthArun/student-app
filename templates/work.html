@@ -1,0 +1,231 @@
+{% extends 'base.html' %} 
+{% block head %}
+<title>Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+{% endblock %} 
+{% block body_class %}dashboard-body{% endblock %}
+{% block body%}
+
+<div class="dashboard-container">
+  <div class="left-panel">
+    <!-- Timer Section -->
+    <div class="timer-section">
+      <div class="streak-display">
+        <h2>🔥 Current Streak: {{ current_user.current_streak }} days</h2>
+        <p>Longest Streak: {{ current_user.longest_streak }} days</p>
+        {% if current_user.current_streak == 0 %}
+        <p style="color: #666">Complete a work session to start your streak!</p>
+        {% elif current_user.current_streak == 1 %}
+        <p style="color: #4caf50">Great start! Keep it up tomorrow!</p>
+        {% else %}
+        <p style="color: #ff6b35">You're on fire! Don't break the chain!</p>
+        {% endif %}
+      </div>
+
+      <div class="timer-controls">
+        <h1>Start a Work Session</h1>
+
+        <h2 id="timer"></h2>
+        <h3 id="phase"></h3>
+
+        <div class="input-group">
+          <input
+            id="Worktime"
+            placeholder="Work Minutes"
+            type="number"
+            min="1"
+          />
+          <input
+            id="Breaktime"
+            placeholder="Break Minutes"
+            type="number"
+            min="1"
+          />
+          <input id="Cycles" placeholder="Cycles" type="number" min="1" />
+        </div>
+
+        <div class="button-group">
+          <button class="button1" id="startButton" onclick="startPomodoro()">
+            Start
+          </button>
+          <button class="button1" id="pauseButton" onclick="pausePomodoro()">
+            Pause
+          </button>
+          <button class="button1" id="resumeButton" onclick="resumePomodoro()">
+            Resume
+          </button>
+        </div>
+
+        <script src="{{ url_for('static', filename='pomodoro.js') }}"></script>
+        <hr />
+        <a href="{{ url_for('view') }}">Back to Home</a>
+      </div>
+    </div>
+
+    <!-- Session Cards Section -->
+    <div class="session-cards">
+      <h2>Recent Sessions</h2>
+
+      {% if sessions_pagination.items %} {% for session in
+      sessions_pagination.items %}
+      <div class="session-card">
+        <p><strong>{{ session.date.strftime('%b %d, %I:%M %p') }}</strong></p>
+        <p>
+          {{ session.worktime }}min work • {{ session.breaktime }}min break • {{
+          session.cycles }} cycles
+        </p>
+      </div>
+      {% endfor %}
+
+      <!-- Pagination Controls -->
+      <div class="pagination">
+        {% if sessions_pagination.has_prev %}
+        <a
+          href="{{ url_for('work', page=sessions_pagination.prev_num) }}"
+          class="button1"
+          >← Prev</a
+        >
+        {% endif %}
+
+        <span
+          >{{ sessions_pagination.page }}/{{ sessions_pagination.pages }}</span
+        >
+
+        {% if sessions_pagination.has_next %}
+        <a
+          href="{{ url_for('work', page=sessions_pagination.next_num) }}"
+          class="button1"
+          >Next →</a
+        >
+        {% endif %}
+      </div>
+      {% else %}
+      <p>No sessions found.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="charts-container">
+      <h2>Progress Overview</h2>
+
+      <div class="chart-row">
+        <div class="chart-container small">
+          <h3>Daily Minutes (7 days)</h3>
+          <canvas id="dailyMinutesChart"></canvas>
+        </div>
+
+        <div class="chart-container small">
+          <h3>Work vs Break</h3>
+          <canvas id="workVsBreakChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container large">
+        <h3>Cycles Over Time</h3>
+        <canvas id="cyclesChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const chartData = {{chart_data | tojson}};
+
+  // Chart 1: Daily Minutes (Bar Chart)
+  const dailyCtx = document.getElementById('dailyMinutesChart').getContext('2d');
+  new Chart(dailyCtx,{
+      type:'bar',
+      data:{
+          labels:chartData.daily_minutes.labels,
+          datasets: [{
+              label: 'Work Minutes',
+              data: chartData.daily_minutes.data,
+              backgroundColor: 'rgba(76, 175, 80, 0.6)',
+              borderColor: 'rgba(76, 175, 80, 1)',
+              borderWidth: 1
+          }]
+      },
+      options:{
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              y:{
+                  beginAtZero: true,
+                  title:{
+                      display:true,
+                      text:'Minutes'
+                  }
+              }
+          },
+          plugins: {
+              legend: {
+                  display: false
+              }
+          }
+      }
+  });
+
+  // Chart 2: Work vs Break Time (Pie Chart)
+  const workBreakCtx = document.getElementById('workVsBreakChart').getContext('2d');
+  new Chart(workBreakCtx, {
+      type: 'pie',
+      data: {
+          labels: chartData.work_vs_break.labels,
+          datasets: [{
+              data: chartData.work_vs_break.data,
+              backgroundColor: [
+                  'rgba(255, 107, 53, 0.8)',  // Orange for work
+                  'rgba(54, 162, 235, 0.8)'   // Blue for break
+              ],
+              borderWidth: 2
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: {
+                  position: 'bottom',
+                  labels: {
+                      boxWidth: 12,
+                      font: {
+                          size: 11
+                      }
+                  }
+              }
+          }
+      }
+  });
+
+  // Chart 3: Cycles Over Time (Line Chart)
+  const cyclesCtx = document.getElementById('cyclesChart').getContext('2d');
+  new Chart(cyclesCtx, {
+      type: 'line',
+      data: {
+          labels: chartData.cycles_over_time.labels,
+          datasets: [{
+              label: 'Cycles Completed',
+              data: chartData.cycles_over_time.data,
+              borderColor: 'rgba(156, 39, 176, 1)',
+              backgroundColor: 'rgba(156, 39, 176, 0.1)',
+              fill: true,
+              tension: 0.4
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  title: {
+                      display: true,
+                      text: 'Cycles'
+                  }
+              }
+          }
+      }
+  });
+</script>
+{% endblock %}

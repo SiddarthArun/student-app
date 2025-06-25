@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Edit Course</title>
+{% endblock %}
+
+{% block body_class %}centered-body{% endblock %}
+
+{% block body %}
+<div class="entrycontainer">
+<div class="entrybox">
+<h1>Edit Course</h1>
+
+<form method="POST">
+  <label for="name">Course Name:</label>
+  <input type="text" name="name" value="{{ course.name }}" required><br><br>
+
+  <button class='button1' type="submit">Save Changes</button>
+</form>
+<br>
+<a href="{{ url_for('view') }}"><button class='button1'>Back</button></a>
+</div>
+</div>
+{% endblock %}
