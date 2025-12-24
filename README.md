@@ -1,4 +1,6 @@
 # 🎓 Student Productivity App
+---
+## Video Demo: https://youtu.be/5LbeinTsxfw
 
 A full-stack web application to help students stay organized and productive.  
 Built with **Flask**, **SQLAlchemy**, and **vanilla HTML/CSS** (with Jinja2 templating), the app provides tools for managing assignments, tracking courses, and improving study habits with a built-in Pomodoro timer.
